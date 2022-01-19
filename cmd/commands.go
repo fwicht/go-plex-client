@@ -271,7 +271,13 @@ func getSessions(c *cli.Context) error {
 		return cli.NewExitError("failed to get sessions: "+err.Error(), 1)
 	}
 
-	if sessions.MediaContainer.Size == 0 {
+	sessionSize, err := sessions.MediaContainer.Size.Int64()
+
+	if err != nil {
+		return cli.NewExitError("failed to get sessions: "+err.Error(), 1)
+	}
+
+	if sessionSize == 0 {
 		fmt.Println("no users in sessions")
 		return nil
 	}
@@ -500,22 +506,17 @@ func signIn(c *cli.Context) error {
 	password := c.Args()[1]
 
 	plexConn, err := plex.SignIn(username, password)
-
 	if err != nil {
 		return cli.NewExitError(err, 1)
 	}
-
 	if plexConn.Token == "" {
 		return cli.NewExitError("failed to receive a plex token", 1)
 	}
-
 	// fmt.Println("your auth token is:", plexConn.Token)
 	fmt.Println("successfully signed in!")
-
 	if isVerbose {
 		fmt.Println("saving token locally...")
 	}
-
 	if err := db.savePlexToken(plexConn.Token); err != nil {
 		return cli.NewExitError(err, 1)
 	}
@@ -762,7 +763,11 @@ func stopPlayback(c *cli.Context) error {
 		return cli.NewExitError(err, 1)
 	}
 
-	sessionCount := sessions.MediaContainer.Size
+	sessionCount, err := sessions.MediaContainer.Size.Int64()
+
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
 
 	if sessionCount < 1 {
 		fmt.Println("no users in session")
@@ -788,7 +793,7 @@ func stopPlayback(c *cli.Context) error {
 
 	fmt.Println("choose a session to stop:")
 
-	var sessionIndex int
+	var sessionIndex int64
 
 	fmt.Scanln(&sessionIndex)
 
