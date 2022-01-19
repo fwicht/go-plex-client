@@ -94,7 +94,6 @@ func New(baseURL, token string) (*Plex, error) {
 // token.
 func SignIn(username, password string) (*Plex, error) {
 	id, err := uuid.NewRandom()
-
 	if err != nil {
 		return &Plex{}, err
 	}
@@ -120,25 +119,20 @@ func SignIn(username, password string) (*Plex, error) {
 	newHeaders.ContentType = "application/x-www-form-urlencoded"
 	newHeaders.Accept = "application/json"
 	resp, err := p.post(query, []byte(body.Encode()), newHeaders)
-
 	if err != nil {
 		return &Plex{}, err
 	}
 
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusCreated {
 		return &Plex{}, errors.New(resp.Status)
 	}
-
 	var signInResponse SignInResponse
-
 	if err := json.NewDecoder(resp.Body).Decode(&signInResponse); err != nil {
+		fmt.Println("ERROR")
 		return &Plex{}, err
 	}
-
 	p.Token = signInResponse.AuthToken
-
 	return &p, err
 }
 
@@ -610,7 +604,8 @@ func (p *Plex) RemoveFriend(id string) (bool, error) {
 		return false, err
 	}
 
-	return result.Response.Code == 0, nil
+	code := result.Response.Code
+	return code == 0, nil
 }
 
 // InviteFriend to access your Plex server. Add restrictions to media or give them full access.
@@ -665,17 +660,17 @@ func (p *Plex) InviteFriend(params InviteFriendParams) error {
 // UpdateFriendAccess limit your friends access to your plex server
 func (p *Plex) UpdateFriendAccess(userID string, params UpdateFriendParams) (bool, error) {
 	// Fix any defaults to statisfy what plex expects
-	if params.AllowSync == "" {
-		params.AllowSync = "0"
-	}
+	// if params.AllowSync == "" {
+	// 	params.AllowSync = "0"
+	// }
 
-	if params.AllowCameraUpload == "" {
-		params.AllowCameraUpload = "0"
-	}
+	// if params.AllowCameraUpload == "" {
+	// 	params.AllowCameraUpload = "0"
+	// }
 
-	if params.AllowChannels == "" {
-		params.AllowChannels = "0"
-	}
+	// if params.AllowChannels == "" {
+	// 	params.AllowChannels = "0"
+	// }
 
 	query := fmt.Sprintf("%s/api/friends/%s", plexURL, userID)
 
@@ -758,7 +753,9 @@ func (p *Plex) CheckUsernameOrEmail(usernameOrEmail string) (bool, error) {
 		return false, err
 	}
 
-	return result.Response.Code == 0, nil
+	code := result.Response.Code
+
+	return code == 0, nil
 }
 
 // StopPlayback acts as a remote controller and sends the 'stop' command
